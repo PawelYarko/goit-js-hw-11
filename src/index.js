@@ -1,42 +1,75 @@
+import NewSearchQuery from './fetch-query';
 import searchCardTpl from './query-card';
+import Notiflix from 'notiflix';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
-
+const newSearchQuery = new NewSearchQuery();
 const searchForm = document.querySelector('.search-form');
-const formSubmit = document.querySelector('.btn-submit');
-const formInput = document.querySelector('.searchQuery');
 
 const gallery = document.querySelector('.gallery');
-
+const loadMoreBtn = document.querySelector('.load-more');
 
 searchForm.addEventListener('submit' , onSearchFormSubmit);
+loadMoreBtn.addEventListener('click', loadMoreQuery);
 
 function onSearchFormSubmit(e){
     e.preventDefault();
-
-    console.log(formInput.value)
-    const searchQuery = formInput.value;
-    fetchQuery(searchQuery)
-    .then(renderSearchQueryCard)
+   
+    newSearchQuery.query = e.currentTarget.elements.searchQuery.value;
+    newSearchQuery.resetePage();
+    newSearchQuery.fetchArticles()
+    .then(data => {
+        toggleBtnLoadMore();
+        alertTotalAmountQuery(data.total);
+        clearHitsContainer();
+        renderSearchQueryCard(data.hits);
+    })
     .catch(error =>{
         console.log(error);
     });
 
 }
 
-function fetchQuery(searchQuery){
-    const url = `https://pixabay.com/api/?key=26762966-8ed2dcb76b4efb10f9cc7c58f&q=${searchQuery}&image_type=photo&orientation=horizontal&safesearch=true`;
-    const options = {
-        "total": 4692,
-        "totalHits": 500,
-        }
-    return fetch(url)
-    .then(response =>{
-        return response.json();
-    })
+function renderSearchQueryCard(hits){
+    console.log(hits);
+    
+    if(hits.length === 0){
+        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+        loadMoreBtn.classList.add('is-hidden');  
+    }else{
+        buildMarkup(hits);
+    }
+    
+    
+    let lightbox = new SimpleLightbox('.gallery a', {});
+    lightbox.refresh();
 }
 
-function renderSearchQueryCard(query){
-    const markup = searchCardTpl(query);
-    gallery.innerHTML = markup;
+function buildMarkup(hits){
+    gallery.insertAdjacentHTML('beforeend', searchCardTpl(hits)) ;
 }
+
+function loadMoreQuery(e){
+    newSearchQuery.fetchArticles()
+    .then(data => renderSearchQueryCard(data.hits))
+    .catch(error =>{
+        console.log(error);
+    });
+}
+
+function clearHitsContainer(){
+    gallery.innerHTML = '';
+}
+
+function alertTotalAmountQuery(totalHits){
+    Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+}
+
+function toggleBtnLoadMore(){
+    loadMoreBtn.classList.add('is-hidden');
+    loadMoreBtn.classList.toggle('is-hidden');
+}
+
+
 
