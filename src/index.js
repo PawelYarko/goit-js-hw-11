@@ -15,11 +15,11 @@ loadMoreBtn.addEventListener('click', loadMoreQuery);
 
 function onSearchFormSubmit(e){
     e.preventDefault();
-   
     newSearchQuery.query = e.currentTarget.elements.searchQuery.value;
     newSearchQuery.resetePage();
-    newSearchQuery.fetchArticles()
+    newSearchQuery.fetchArticles()  
     .then(data => {
+        console.log(data);
         toggleBtnLoadMore();
         alertTotalAmountQuery(data.total);
         clearHitsContainer();
@@ -32,8 +32,6 @@ function onSearchFormSubmit(e){
 }
 
 function renderSearchQueryCard(hits){
-    console.log(hits);
-    
     if(hits.length === 0){
         Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
         loadMoreBtn.classList.add('is-hidden');  
